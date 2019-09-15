@@ -1,0 +1,434 @@
+﻿Sub run_all()
+
+Dim t_start
+Dim t_end
+Dim t_total
+
+MsgBox ("Hello " & Application.UserName & " I hope you are ready!")
+
+t_start = Timer
+
+For i = 1 To 1 'Worksheets.Count
+    Sheet_Prep Val(i)
+    Total_Calculations_Forumlas Val(i)
+    other_Calculations Val(i)
+    'Other_calc_2 Val(i)
+    bonus Val(i)
+    'Cleanup
+    'quick_Calc Val(i)
+Next i
+
+t_end = Timer
+If t_end - t_start > 60 Then t_total = (t_end - t_start) / 60 Else t_total = t_end - t_start
+MsgBox ("This operation time: " & t_total)
+
+End Sub
+Sub Sheet_Prep(sht As Integer)
+
+Dim lastrow As Long
+Dim LastColumn As Long
+Dim StartCell As Range
+Dim myrange As Range
+
+Dim timer_start
+Dim timer_end
+Dim total_Time
+
+
+Dim Ticker As Range
+Dim Yr_chng As Range
+Dim pct_chng As Range
+Dim tot_volume As Range
+
+'Start the timer to see how long this takes
+timer_start = Timer
+
+Set StartCell = Worksheets(sht).Range("A2")
+Worksheets(sht).Select
+
+'turn off screen updating until all the procedures have completed
+Application.ScreenUpdating = False
+
+'Find Last Row and Column for the dataset
+  lastrow = Worksheets(sht).Cells(Worksheets(sht).Rows.Count, StartCell.Column).End(xlUp).Row
+  LastColumn = Worksheets(sht).Cells(StartCell.Row, StartCell.Columns.Count).End(xlToRight).Column
+
+'Create the headers for the data
+    Set Ticker = Cells(1, "K")
+    Set Yr_chng = Cells(1, "L")
+    Set pct_chng = Cells(1, "M")
+    Set tot_volume = Cells(1, "N")
+    
+    
+    Ticker.Value = "Ticker"
+    Yr_chng.Value = "Yearly Change"
+    pct_chng.Value = "Percent Change"
+    tot_volume.Value = "Total Stock Volume"
+
+
+'Take the ticker column and move distinct values under new Ticker Header
+    'First copy over the entire dataset
+        Range(StartCell, StartCell.End(xlDown)).Copy _
+            Destination:=Ticker.Offset(1, 0)
+    'second resize it to contain only distinct values
+        Set myrange = Range(Ticker, "K" & lastrow)
+        myrange.RemoveDuplicates Columns:=1, Header:=xlYes
+
+'Sort the sheet to ensure the all tickers are alphabetical and by date
+    Worksheets(sht).Sort.SortFields.Clear
+    Worksheets(sht).Sort.SortFields.Add2 Key:=Range("A2:A" & lastrow), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    Worksheets(sht).Sort.SortFields.Add2 Key:=Range("B2:B" & lastrow), _
+        SortOn:=xlSortOnValues, Order:=xlAscending, DataOption:=xlSortNormal
+    With Worksheets(sht).Sort
+        .SetRange Range("A1:G" & lastrow)
+        .Header = xlYes
+        .MatchCase = False
+        .Orientation = xlTopToBottom
+        .SortMethod = xlPinYin
+        .Apply
+    End With
+    
+'End Timer
+    timer_end = Timer
+
+'Calculate time in Seconds to run
+    total_Time = timer_end - timer_start
+    'Range("I2").Value = "Sheet PreP"
+    'Range("I3").Value = total_Time
+    'MsgBox ("This run took " & Round(total_Time, 2) & " seconds")
+
+'Turn Back on screen updating
+    Application.ScreenUpdating = True
+End Sub
+Sub Total_Calculations_Forumlas(sht As Integer)
+
+Dim lastrow As Long
+Dim LastColumn As Long
+Dim StartCell As Range
+Dim myrange As Range
+
+Dim Ticker As Range 'reference for the ticker calculations
+Set Ticker = Cells(1, "K")
+
+Dim timer_start
+Dim timer_end
+Dim total_Time
+
+'Start the timer to see how long this takes
+timer_start = Timer
+
+Set StartCell = Worksheets(sht).Range("A2")
+Worksheets(sht).Select
+
+'turn off screen updating until all the procedures have completed
+Application.ScreenUpdating = False
+
+'Find Last Row and Column for the dataset
+  lastrow = Worksheets(sht).Cells(Worksheets(sht).Rows.Count, StartCell.Column).End(xlUp).Row
+  LastColumn = Worksheets(sht).Cells(StartCell.Row, StartCell.Columns.Count).End(xlToRight).Column
+
+'Add in Calculation for Total Stock Volume Column N
+    Dim rowIndex As Long
+    Dim lastTicker As Long
+    lastTicker = Worksheets(sht).Range(Ticker, Ticker.End(xlDown)).Count
+    
+    For rowIndex = 2 To lastTicker
+    
+    Dim Dynamic_start As Long
+    Dim Dynamic_End As Long
+    'Dynamic_start = 1 + Dynamic_End + 1
+    'Dynamic_End = Application.CountIf(Range("A1:A" & lastrow), Cells(rowIndex, "K")) + Dynamic_start - 1
+    
+    calcFormula = Application.SumIf(Range("A1", "A" & lastrow), Cells(rowIndex, "K").Value, Range("G1", "G" & lastrow))
+        Cells(rowIndex, "N").Value = calcFormula
+    'Put up a screen to show the status of the code
+    Application.StatusBar = "Calculating Totals: " & rowIndex & " of " & lastTicker & " items done for worksheet:" & sht
+    Next rowIndex
+    
+    Application.StatusBar = False
+
+'End Timer
+    timer_end = Timer
+
+'Calculate time in Seconds to run
+    total_Time = timer_end - timer_start
+    'Range("I4").Value = "Total Calcs"
+    'Range("I5").Value = total_Time
+    'MsgBox ("This run took " & Round(total_Time, 2) & " seconds")
+
+'Turn Back on screen updating
+    Application.ScreenUpdating = True
+
+End Sub
+Sub other_Calculations(sht As Integer)
+
+Dim lastrow As Long
+Dim LastColumn As Long
+Dim StartCell As Range
+Dim myrange As Range
+
+Dim Ticker As Range 'reference for the ticker calculations
+Set Ticker = Cells(1, "K")
+
+Dim timer_start
+Dim timer_end
+Dim total_Time
+
+'Start the timer to see how long this takes
+timer_start = Timer
+
+Set StartCell = Worksheets(sht).Range("A2")
+Worksheets(sht).Select
+
+'turn off screen updating until all the procedures have completed
+Application.ScreenUpdating = False
+
+'Find Last Row and Column for the dataset
+  lastrow = Worksheets(sht).Cells(Worksheets(sht).Rows.Count, StartCell.Column).End(xlUp).Row
+  LastColumn = Worksheets(sht).Cells(StartCell.Row, StartCell.Columns.Count).End(xlToRight).Column
+
+
+'Add in Calculation for Yearly change in column L and the Percent Change in column M
+    Dim yr_start As Single
+    Dim yr_end As Single
+    Dim loop_start
+    
+    Dim lastTicker As Long
+    lastTicker = Worksheets(sht).Range(Ticker, Ticker.End(xlDown)).Count
+
+'Beginning of loop
+For i = 2 To lastTicker
+    Dim lp_start As Long
+    Dim Lp_end As Long
+    'find the first row with the tracker and the last row with the tracker
+    lp_start = Application.Match(Cells(i, "K"), Range("A1:A" & lastrow), 0)
+    Lp_end = Application.CountIf(Range("A1:A" & lastrow), Cells(i, "K")) + Application.Match(Cells(i, "K"), Range("A1:A" & lastrow), 0) - 1
+   
+   'Calculate the Year start and the Year end using the first and last row of the tracker
+    yr_start = Cells(lp_start, "C")
+    yr_end = Cells(Lp_end, "F")
+    
+    'Percent change work
+        If yr_end = 0 Then Cells(i, "M").Value = "-" Else Cells(i, "M").Value = (yr_end - yr_start) / yr_end 'Percent Change Calculation
+    Application.StatusBar = "Calculating Change: " & i & " of " & lastTicker & " items done for worksheet:" & sht
+    
+Next i
+
+' Conditional Formatting
+    Range("L2:L" & lastTicker).NumberFormat = "0.000000000" 'formatting of the yearly change to be standard 9 decimal places
+    With Range("L2:L" & lastTicker).FormatConditions.Add(xlCellValue, xlLess, "=0")
+         .Interior.Color = -16776961 'Green Background Color
+    End With
+    With Range("L2:L" & lastTicker).FormatConditions.Add(xlCellValue, xlLess, "=0")
+        .Interior.Color = -16776961 'Red Background Color
+    End With
+        If yr_end = 0 Then Cells(i, "M").Value = "-" Else Cells(i, "M").Value = (yr_end - yr_start) / yr_start 'Percent Change Calculation
+        Cells(i, "M").NumberFormat = "0.00%" 'Formatting of the percent change to be a percent
+    Range("M2:M" & lastrow).NumberFormat = "0.00%" 'Formatting of the percent change to be a percent
+
+'End Timer
+    timer_end = Timer
+
+'Calculate time in Seconds to run
+    total_Time = timer_end - timer_start
+    'Range("I6").Value = "Other Calcs"
+    'Range("I7").Value = total_Time
+    'MsgBox ("This run took " & Round(total_Time, 2) & " seconds")
+
+'Turn Back on screen updating
+    Application.ScreenUpdating = True
+
+End Sub
+Sub bonus(sht As Integer)
+
+Dim Ticker As Range 'reference for the ticker calculations
+Set Ticker = Cells(1, "K")
+
+Dim timer_start
+Dim timer_end
+Dim total_Time
+
+'Start the timer to see how long this takes
+timer_start = Timer
+
+Set StartCell = Worksheets(sht).Range("A2")
+Worksheets(sht).Select
+
+'turn off screen updating until all the procedures have completed
+Application.ScreenUpdating = False
+
+    Dim lastTicker As Long
+    lastTicker = Worksheets(sht).Range(Ticker, Ticker.End(xlDown)).Count
+    
+    Cells(1, "R").Value = "Ticker"
+    Cells(1, "S").Value = "Value"
+    
+    Cells(2, "Q").Value = "Greatest % increase"
+    Cells(2, "S").Value = Application.Max(Range("L1:L" & lastTicker))
+    Cells(2, "R").Value = Cells(Application.Match(Cells(2, "s").Value, Range("L1:L" & lastTicker), 0), "K")
+    
+    Cells(3, "Q").Value = "Greatest % Decrease"
+    Cells(3, "S").Value = Application.Min(Range("L1:L" & lastTicker))
+    Cells(3, "R").Value = Cells(Application.Match(Cells(3, "s").Value, Range("L1:L" & lastTicker), 0), "K")
+    
+    Cells(4, "Q").Value = "Greatest Total Volume"
+    Cells(4, "S").Value = Application.Max(Range("N1:N" & lastTicker))
+    Cells(4, "R").Value = Cells(Application.Match(Cells(4, "s").Value, Range("N1:N" & lastTicker), 0), "K")
+
+'End Timer
+    timer_end = Timer
+
+'Calculate time in Seconds to run
+    total_Time = timer_end - timer_start
+    Range("I8").Value = "Bonus Calcs"
+    Range("I8").Value = total_Time
+    'MsgBox ("This run took " & Round(total_Time, 2) & " seconds")
+
+'Turn Back on screen updating
+    Application.ScreenUpdating = True
+End Sub
+
+Sub Other_calc_2(sht As Integer)
+Dim lastrow As Long
+Dim LastColumn As Long
+Dim StartCell As Range
+Dim myrange As Range
+
+Dim timer_start
+Dim timer_end
+Dim total_Time
+
+'Start the timer to see how long this takes
+timer_start = Timer
+
+Set StartCell = Worksheets(sht).Range("A2")
+Worksheets(sht).Select
+
+'turn off screen updating until all the procedures have completed
+Application.ScreenUpdating = False
+
+'Find Last Row and Column for the dataset
+  lastrow = Worksheets(sht).Cells(Worksheets(sht).Rows.Count, StartCell.Column).End(xlUp).Row
+  LastColumn = Worksheets(sht).Cells(StartCell.Row, StartCell.Columns.Count).End(xlToRight).Column
+
+
+Dim Ticker As Range 'reference for the ticker calculations
+Set Ticker = Cells(1, "K")
+
+'Add in Calculation for Yearly change in column L and the Percent Change in column M
+    Dim yr_start As Single
+    Dim yr_end As Single
+    Dim loop_start
+    
+    Dim lastTicker As Long
+    lastTicker = Worksheets(sht).Range(Ticker, Ticker.End(xlDown)).Count
+
+For i = 2 To lastTicker
+    
+    Dim lp_start As Long
+    Dim Lp_end As Long
+    Dim Lp_add As Long
+    'Tracking for loop
+    
+    'Find Last Row and Column for the dataset
+    lastrow = Worksheets(sht).Cells(Worksheets(sht).Rows.Count, StartCell.Column).End(xlUp).Row
+    
+    lp_start = 2 + Lp_add
+    Lp_end = lastrow
+    
+    For b = lp_start To lastrow
+        If Cells(i, "K") = Cells(b, "A") _
+            And Cells(i, "K") <> Cells(b, "A").Offset(-1, 0) _
+            And Cells(i, "K") = Cells(b, "A").Offset(1, 0) _
+                Then yr_start = Cells(b, "C")
+        If Cells(i, "K") = Cells(b, "A") _
+            And Cells(i, "K") = Cells(b, "A").Offset(-1, 0) _
+            And Cells(i, "K") <> Cells(b, "A").Offset(1, 0) _
+                Then yr_end = Cells(b, "F"): Lp_add = Cells(b, "A").Row: Exit For
+    Next b
+  
+    'Yearly change work
+        Cells(i, "L").Value = yr_end - yr_start 'Yearly Change Calculation
+        Cells(i, "L").NumberFormat = "0.000000000" 'formatting of the yearly change to be standard 9 decimal places
+        'Make the negative Values Red for yearly change
+        With Cells(i, "L").FormatConditions.Add(xlCellValue, xlLess, "=0")
+             .Interior.Color = -16776961
+            .StopIfTrue = False
+        End With
+        'Make the positive change values Green for yearly change
+        With Cells(i, "L").FormatConditions.Add(xlCellValue, xlGreater, "=0")
+             .Interior.Color = -16744448
+            .StopIfTrue = False
+        End With
+    'Percent change work
+        If yr_end = 0 Then Cells(i, "M").Value = "-" Else Cells(i, "M").Value = (yr_end - yr_start) / yr_end 'Percent Change Calculation
+        Cells(i, "M").NumberFormat = "0.00%" 'Formatting of the percent change to be a percent
+    Application.StatusBar = "Calculating Change: " & i & " of " & lastTicker & " items done for worksheet:" & sht
+Next i
+
+
+'End Timer
+    timer_end = Timer
+
+'Calculate time in Seconds to run
+    total_Time = timer_end - timer_start
+    Range("I10").Value = "Other Calcs 2"
+    Range("I11").Value = total_Time
+    'MsgBox ("This run took " & Round(total_Time, 2) & " seconds")
+
+'Turn Back on screen updating
+    Application.ScreenUpdating = True
+
+End Sub
+
+Sub quick_Calc(sht As Integer)
+
+Dim lastrow As Long
+Dim LastColumn As Long
+Dim StartCell As Range
+Dim myrange As Range
+
+Dim Ticker As Range 'reference for the ticker calculations
+Set Ticker = Cells(1, "K")
+
+Dim timer_start
+Dim timer_end
+Dim total_Time
+
+'Start the timer to see how long this takes
+timer_start = Timer
+
+Set StartCell = Worksheets(sht).Range("A2")
+Worksheets(sht).Select
+
+'turn off screen updating until all the procedures have completed
+Application.ScreenUpdating = False
+
+'Find Last Row and Column for the dataset
+  lastrow = Worksheets(sht).Cells(Worksheets(sht).Rows.Count, StartCell.Column).End(xlUp).Row
+  LastColumn = Worksheets(sht).Cells(StartCell.Row, StartCell.Columns.Count).End(xlToRight).Column
+
+
+'Add in Calculation for Yearly change in column L and the Percent Change in column M
+    Dim yr_start As Single
+    Dim yr_end As Single
+    Dim loop_start
+    Dim workingCell As Range
+
+For i = 2 To lastrow
+
+    If Cells(i, 1).Value = Cells(i - 1, 1).Value And Cells(i, 1).Value <> Cells(i + 1, 1).Value Then
+        workingCell = Range("K1").End(xlDown).Offset(1, 0)
+        workingCell.Value = Cells(i, 1).Value
+        workingCell.Offset(0, 1).Value = "Yes"
+        workingCell.Offset(0, 2).Value = "No"
+    ElseIf Cells(i, 1).Value <> Cells(i - 1, 1).Value And Cells(i, 1).Value = Cells(i + 1, 1).Value Then
+    End If
+    'If Cells(i, 1).Value = Cells(i - 1, 1).Value And Cells(i, 1).Value <> Cells(i + 1, 1).Value Then Range("K1").End(xlDown).Offset(0, 1).Value = "Yes"
+Next i
+
+'turn off screen updating until all the procedures have completed
+Application.ScreenUpdating = True
+End Sub
+
